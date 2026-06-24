@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+    <div>
+        <h4 class="alert-heading mb-1">Payment Successful!</h4>
+        <p class="mb-0">Your payment has been securely processed and your shipment is being arranged.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title text-muted border-bottom pb-2">Order Details</h5>
+                <p class="mb-1"><strong>Invoice ID:</strong> <span class="text-primary">{{ invoice.invoice_id }}</span></p>
+                <p class="mb-1"><strong>Date:</strong> {{ invoice.date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p class="mb-1"><strong>Status:</strong> <span class="badge bg-success">{{ invoice.status }}</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title text-muted border-bottom pb-2">Delivery Information</h5>
+                <p class="mb-1"><strong>Customer:</strong> {{ invoice.customer.name }}</p>
+                <p class="mb-1"><strong>Address:</strong><br> {{ invoice.customer.address }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="text-muted border-bottom pb-2 mt-4">Items Purchased</h5>
+<ul class="list-group list-group-flush mb-4">
+{% for item in invoice.items %}
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+        {{ item.product.name }} (x{{ item.quantity }})
+        <span class="text-muted">${{ "%.2f"|format(item.get_subtotal()) }}</span>
+    </li>
+{% endfor %}
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0 mt-2 border-top-0">
+        <strong class="fs-5">Total Paid</strong>
+        <strong class="fs-4 text-primary">${{ "%.2f"|format(invoice.total) }}</strong>
+    </li>
+</ul>
+
+<div class="text-center mt-5">
+    <a href="/" class="btn btn-outline-primary">Return to Store</a>
+</div>
+{% endblock %}

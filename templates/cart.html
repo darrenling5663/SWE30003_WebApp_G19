@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Your Shopping Cart</h2>
+
+{% if not cart_items %}
+    <div class="alert alert-light text-center py-5">
+        <h4 class="text-muted">Your cart is empty</h4>
+        <a href="/" class="btn btn-primary mt-3">Browse Catalogue</a>
+    </div>
+{% else %}
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in cart_items %}
+                <tr>
+                    <td class="fw-bold">{{ item.product.name }}</td>
+                    <td>${{ "%.2f"|format(item.product.price) }}</td>
+                    <td>x{{ item.quantity }}</td>
+                    <td class="text-end fw-bold">${{ "%.2f"|format(item.get_subtotal()) }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center bg-light p-4 rounded">
+        <h3 class="mb-0">Total: <span class="text-primary">${{ "%.2f"|format(total) }}</span></h3>
+        <form action="/checkout" method="POST">
+            <button type="submit" class="btn btn-success btn-lg px-5">Secure Checkout</button>
+        </form>
+    </div>
+{% endif %}
+{% endblock %}
