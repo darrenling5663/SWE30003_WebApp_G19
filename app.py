@@ -47,7 +47,7 @@ def init_db():
         if cursor.fetchone()[0] == 0:
             default_products = [
                 ("P001", "Fresh Milk 1L", 3.50, 20, "Daily Need", "🥛"),
-                ("P002", "Toilet Paper (12 Rolls)", 8.00, 15, "Household", "🧻"),
+                ("P002", "Toilet Paper 12pk", 8.00, 15, "Household", "🧻"),
                 ("P003", "Chocolate Chip Cookies", 4.00, 25, "Snacks", "🍪"),
                 ("P004", "Organic Shampoo", 12.50, 10, "Personal Care", "🧴"),
                 ("P005", "Potato Chips", 3.00, 30, "Snacks", "🥔"),
@@ -120,7 +120,6 @@ def catalogue():
         
     db = get_db()
     rows = db.execute("SELECT * FROM products").fetchall()
-    # Instantiate domain objects from the raw database rows
     products = [Product(r['product_id'], r['name'], r['price'], r['stock_level'], r['category'], r['icon']) for r in rows]
     
     return render_template('catalogue.html', products=products)
@@ -197,6 +196,24 @@ def add_to_cart(product_id):
     flash(f"Added {qty} x {product.name} to cart.")
     return redirect(url_for('catalogue'))
 
+@app.route('/remove_from_cart/<product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+        
+    cart = session.get('cart', {})
+    
+    if product_id in cart:
+        db = get_db()
+        row = db.execute("SELECT name FROM products WHERE product_id = ?", (product_id,)).fetchone()
+        product_name = row['name'] if row else "Item"
+        
+        cart.pop(product_id)
+        session['cart'] = cart
+        flash(f"Success: {product_name} was removed from your cart.")
+        
+    return redirect(url_for('view_cart'))
+
 @app.route('/cart')
 def view_cart():
     if 'user' not in session or session.get('user') == STAFF_EMAIL:
@@ -243,7 +260,6 @@ def checkout():
         cart_items.append(item)
         total += item.get_subtotal()
         
-        # Deduct stock permanently in SQLite
         new_stock = product.stock_level - qty
         db.execute("UPDATE products SET stock_level = ? WHERE product_id = ?", (new_stock, pid))
 
@@ -254,7 +270,7 @@ def checkout():
         invoice.status = "PAID"
         db.execute("INSERT INTO invoices VALUES (?, ?, ?, ?, ?)", 
                    (invoice.invoice_id, invoice.customer.email, invoice.date.strftime('%Y-%m-%d %H:%M:%S'), invoice.total, invoice.status))
-        db.commit() # Commit all stock updates and the invoice
+        db.commit() 
         session['cart'] = {}
         return render_template('invoice.html', invoice=invoice)
     else:
